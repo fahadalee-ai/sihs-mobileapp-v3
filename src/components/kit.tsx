@@ -1,6 +1,6 @@
 import { Link, useCanGoBack, useRouter } from "@tanstack/react-router";
-import { ArrowLeft, ChevronRight, X } from "lucide-react";
-import type { ReactNode } from "react";
+import { AlertCircle, ArrowLeft, Check, ChevronDown, ChevronRight, X } from "lucide-react";
+import { useEffect, useId, useRef, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 export function Screen({
@@ -99,7 +99,7 @@ export function Button({
     <button
       {...props}
       className={cn(
-        "inline-flex min-h-11 items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold tracking-tight transition-colors disabled:opacity-50",
+        "inline-flex min-h-11 min-w-11 items-center justify-center gap-2 rounded-md px-4 py-3 text-sm font-semibold tracking-tight transition-colors disabled:cursor-not-allowed disabled:bg-[#c5d0c8] disabled:text-[#3d4a44] disabled:opacity-100",
         styles,
         full && "w-full",
         className,
@@ -223,21 +223,29 @@ export function Field({
   error,
   children,
   hint,
+  nativeLabel = true,
 }: {
   label: string;
   error?: string;
   hint?: string;
   children: ReactNode;
+  nativeLabel?: boolean;
 }) {
+  const Tag = nativeLabel ? "label" : "div";
   return (
-    <label className="mb-4 block">
+    <Tag className="mb-4 block">
       <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-muted-foreground">
         {label}
       </span>
       {children}
       {hint && !error && <span className="mt-1 block text-xs text-muted-foreground">{hint}</span>}
-      {error && <span className="mt-1 block text-xs font-medium text-danger">{error}</span>}
-    </label>
+      {error && (
+        <span className="mt-1 flex items-start gap-1 text-xs font-medium text-danger" role="alert">
+          <AlertCircle size={14} aria-hidden className="mt-0.5 shrink-0" />
+          <span>{error}</span>
+        </span>
+      )}
+    </Tag>
   );
 }
 
@@ -253,7 +261,110 @@ export function Textarea(props: React.TextareaHTMLAttributes<HTMLTextAreaElement
 }
 
 export function Select(props: React.SelectHTMLAttributes<HTMLSelectElement>) {
-  return <select {...props} className={cn(inputClass, props.className)} />;
+  return (
+    <span className="relative block">
+      <select
+        {...props}
+        className={cn(
+          inputClass,
+          "min-h-11 cursor-pointer appearance-none pr-10 disabled:cursor-not-allowed disabled:opacity-60",
+          props.className,
+        )}
+      />
+      <ChevronDown
+        size={18}
+        aria-hidden
+        className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[#3d4a44]"
+      />
+    </span>
+  );
+}
+
+export function MenuSelect({
+  value,
+  onChange,
+  options,
+  placeholder,
+  disabled,
+  open,
+  onOpenChange,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  options: string[];
+  placeholder: string;
+  disabled?: boolean;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
+  const rootRef = useRef<HTMLDivElement>(null);
+  const listId = useId();
+
+  useEffect(() => {
+    if (!open) return;
+    const close = (event: PointerEvent) => {
+      if (!rootRef.current?.contains(event.target as Node)) onOpenChange(false);
+    };
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onOpenChange(false);
+    };
+    document.addEventListener("pointerdown", close);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("pointerdown", close);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open, onOpenChange]);
+
+  return (
+    <div ref={rootRef} className={cn("relative", open && "z-50")}>
+      <button
+        type="button"
+        disabled={disabled}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-controls={listId}
+        onClick={() => onOpenChange(!open)}
+        className={cn(
+          inputClass,
+          "flex min-h-11 items-center justify-between gap-2 pr-3 text-left disabled:cursor-not-allowed disabled:opacity-60",
+          value ? "text-foreground" : "text-muted-foreground",
+        )}
+      >
+        <span className="truncate">{value || placeholder}</span>
+        <ChevronDown size={18} aria-hidden className={cn("shrink-0 text-[#3d4a44]", open && "rotate-180")} />
+      </button>
+      {open && (
+        <ul
+          id={listId}
+          role="listbox"
+          className="absolute left-0 right-0 top-[calc(100%+4px)] z-40 max-h-60 overflow-y-auto rounded-xl border border-[#d7e3da] bg-white py-1 shadow-lg"
+        >
+          {options.map((item) => {
+            const selected = item === value;
+            return (
+              <li key={item} role="option" aria-selected={selected}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    onChange(item);
+                    onOpenChange(false);
+                  }}
+                  className={cn(
+                    "flex min-h-11 w-full items-center justify-between gap-2 px-3 text-left text-sm text-[#001e16]",
+                    selected ? "bg-[#e7f6df] font-semibold" : "hover:bg-[#f3f8f4]",
+                  )}
+                >
+                  <span className="truncate">{item}</span>
+                  {selected && <Check size={16} aria-hidden className="shrink-0 text-[#2f7a1c]" />}
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </div>
+  );
 }
 
 export function Row({

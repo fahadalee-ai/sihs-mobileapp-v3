@@ -10,33 +10,268 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AppRouteImport } from './routes/_app'
+import { Route as ForgotRouteImport } from './routes/forgot'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as OnboardingRouteImport } from './routes/onboarding'
+import { Route as ReadyRouteImport } from './routes/ready'
+import { Route as SignupRouteImport } from './routes/signup'
+import { Route as VerifyRouteImport } from './routes/verify'
+import { Route as AppBookingsRouteImport } from './routes/_app/bookings'
+import { Route as AppConfirmationRouteImport } from './routes/_app/confirmation'
+import { Route as AppDepositRouteImport } from './routes/_app/deposit'
+import { Route as AppHomeRouteImport } from './routes/_app/home'
+import { Route as AppLocationRouteImport } from './routes/_app/location'
+import { Route as AppLocationsRouteImport } from './routes/_app/locations'
+import { Route as AppPaymentRouteImport } from './routes/_app/payment'
+import { Route as AppProfileRouteImport } from './routes/_app/profile'
+import { Route as AppProfileEditRouteImport } from './routes/_app/profile-edit'
+import { Route as AppRequestRouteImport } from './routes/_app/request'
+import { Route as LegalDocRouteImport } from './routes/legal/$doc'
+import { Route as AppServicesSlugRouteImport } from './routes/_app/services/$slug'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppRoute = AppRouteImport.update({
+  id: '/_app',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ForgotRoute = ForgotRouteImport.update({
+  id: '/forgot',
+  path: '/forgot',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OnboardingRoute = OnboardingRouteImport.update({
+  id: '/onboarding',
+  path: '/onboarding',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReadyRoute = ReadyRouteImport.update({
+  id: '/ready',
+  path: '/ready',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SignupRoute = SignupRouteImport.update({
+  id: '/signup',
+  path: '/signup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const VerifyRoute = VerifyRouteImport.update({
+  id: '/verify',
+  path: '/verify',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppBookingsRoute = AppBookingsRouteImport.update({
+  id: '/bookings',
+  path: '/bookings',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppConfirmationRoute = AppConfirmationRouteImport.update({
+  id: '/confirmation',
+  path: '/confirmation',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppDepositRoute = AppDepositRouteImport.update({
+  id: '/deposit',
+  path: '/deposit',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppHomeRoute = AppHomeRouteImport.update({
+  id: '/home',
+  path: '/home',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppLocationRoute = AppLocationRouteImport.update({
+  id: '/location',
+  path: '/location',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppLocationsRoute = AppLocationsRouteImport.update({
+  id: '/locations',
+  path: '/locations',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppPaymentRoute = AppPaymentRouteImport.update({
+  id: '/payment',
+  path: '/payment',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppProfileRoute = AppProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppProfileEditRoute = AppProfileEditRouteImport.update({
+  id: '/profile-edit',
+  path: '/profile-edit',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppRequestRoute = AppRequestRouteImport.update({
+  id: '/request',
+  path: '/request',
+  getParentRoute: () => AppRoute,
+} as any)
+const LegalDocRoute = LegalDocRouteImport.update({
+  id: '/legal/$doc',
+  path: '/legal/$doc',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppServicesSlugRoute = AppServicesSlugRouteImport.update({
+  id: '/services/$slug',
+  path: '/services/$slug',
+  getParentRoute: () => AppRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/forgot': typeof ForgotRoute
+  '/login': typeof LoginRoute
+  '/onboarding': typeof OnboardingRoute
+  '/ready': typeof ReadyRoute
+  '/signup': typeof SignupRoute
+  '/verify': typeof VerifyRoute
+  '/bookings': typeof AppBookingsRoute
+  '/confirmation': typeof AppConfirmationRoute
+  '/deposit': typeof AppDepositRoute
+  '/home': typeof AppHomeRoute
+  '/location': typeof AppLocationRoute
+  '/locations': typeof AppLocationsRoute
+  '/payment': typeof AppPaymentRoute
+  '/profile': typeof AppProfileRoute
+  '/profile-edit': typeof AppProfileEditRoute
+  '/request': typeof AppRequestRoute
+  '/legal/$doc': typeof LegalDocRoute
+  '/services/$slug': typeof AppServicesSlugRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/forgot': typeof ForgotRoute
+  '/login': typeof LoginRoute
+  '/onboarding': typeof OnboardingRoute
+  '/ready': typeof ReadyRoute
+  '/signup': typeof SignupRoute
+  '/verify': typeof VerifyRoute
+  '/bookings': typeof AppBookingsRoute
+  '/confirmation': typeof AppConfirmationRoute
+  '/deposit': typeof AppDepositRoute
+  '/home': typeof AppHomeRoute
+  '/location': typeof AppLocationRoute
+  '/locations': typeof AppLocationsRoute
+  '/payment': typeof AppPaymentRoute
+  '/profile': typeof AppProfileRoute
+  '/profile-edit': typeof AppProfileEditRoute
+  '/request': typeof AppRequestRoute
+  '/legal/$doc': typeof LegalDocRoute
+  '/services/$slug': typeof AppServicesSlugRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_app': typeof AppRouteWithChildren
+  '/forgot': typeof ForgotRoute
+  '/login': typeof LoginRoute
+  '/onboarding': typeof OnboardingRoute
+  '/ready': typeof ReadyRoute
+  '/signup': typeof SignupRoute
+  '/verify': typeof VerifyRoute
+  '/_app/bookings': typeof AppBookingsRoute
+  '/_app/confirmation': typeof AppConfirmationRoute
+  '/_app/deposit': typeof AppDepositRoute
+  '/_app/home': typeof AppHomeRoute
+  '/_app/location': typeof AppLocationRoute
+  '/_app/locations': typeof AppLocationsRoute
+  '/_app/payment': typeof AppPaymentRoute
+  '/_app/profile': typeof AppProfileRoute
+  '/_app/profile-edit': typeof AppProfileEditRoute
+  '/_app/request': typeof AppRequestRoute
+  '/legal/$doc': typeof LegalDocRoute
+  '/_app/services/$slug': typeof AppServicesSlugRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/forgot'
+    | '/login'
+    | '/onboarding'
+    | '/ready'
+    | '/signup'
+    | '/verify'
+    | '/bookings'
+    | '/confirmation'
+    | '/deposit'
+    | '/home'
+    | '/location'
+    | '/locations'
+    | '/payment'
+    | '/profile'
+    | '/profile-edit'
+    | '/request'
+    | '/legal/$doc'
+    | '/services/$slug'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/forgot'
+    | '/login'
+    | '/onboarding'
+    | '/ready'
+    | '/signup'
+    | '/verify'
+    | '/bookings'
+    | '/confirmation'
+    | '/deposit'
+    | '/home'
+    | '/location'
+    | '/locations'
+    | '/payment'
+    | '/profile'
+    | '/profile-edit'
+    | '/request'
+    | '/legal/$doc'
+    | '/services/$slug'
+  id:
+    | '__root__'
+    | '/'
+    | '/_app'
+    | '/forgot'
+    | '/login'
+    | '/onboarding'
+    | '/ready'
+    | '/signup'
+    | '/verify'
+    | '/_app/bookings'
+    | '/_app/confirmation'
+    | '/_app/deposit'
+    | '/_app/home'
+    | '/_app/location'
+    | '/_app/locations'
+    | '/_app/payment'
+    | '/_app/profile'
+    | '/_app/profile-edit'
+    | '/_app/request'
+    | '/legal/$doc'
+    | '/_app/services/$slug'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AppRoute: typeof AppRouteWithChildren
+  ForgotRoute: typeof ForgotRoute
+  LoginRoute: typeof LoginRoute
+  OnboardingRoute: typeof OnboardingRoute
+  ReadyRoute: typeof ReadyRoute
+  SignupRoute: typeof SignupRoute
+  VerifyRoute: typeof VerifyRoute
+  LegalDocRoute: typeof LegalDocRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +283,182 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_app': {
+      id: '/_app'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AppRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/forgot': {
+      id: '/forgot'
+      path: '/forgot'
+      fullPath: '/forgot'
+      preLoaderRoute: typeof ForgotRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/onboarding': {
+      id: '/onboarding'
+      path: '/onboarding'
+      fullPath: '/onboarding'
+      preLoaderRoute: typeof OnboardingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ready': {
+      id: '/ready'
+      path: '/ready'
+      fullPath: '/ready'
+      preLoaderRoute: typeof ReadyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/signup': {
+      id: '/signup'
+      path: '/signup'
+      fullPath: '/signup'
+      preLoaderRoute: typeof SignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/verify': {
+      id: '/verify'
+      path: '/verify'
+      fullPath: '/verify'
+      preLoaderRoute: typeof VerifyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_app/bookings': {
+      id: '/_app/bookings'
+      path: '/bookings'
+      fullPath: '/bookings'
+      preLoaderRoute: typeof AppBookingsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/confirmation': {
+      id: '/_app/confirmation'
+      path: '/confirmation'
+      fullPath: '/confirmation'
+      preLoaderRoute: typeof AppConfirmationRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/deposit': {
+      id: '/_app/deposit'
+      path: '/deposit'
+      fullPath: '/deposit'
+      preLoaderRoute: typeof AppDepositRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/home': {
+      id: '/_app/home'
+      path: '/home'
+      fullPath: '/home'
+      preLoaderRoute: typeof AppHomeRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/location': {
+      id: '/_app/location'
+      path: '/location'
+      fullPath: '/location'
+      preLoaderRoute: typeof AppLocationRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/locations': {
+      id: '/_app/locations'
+      path: '/locations'
+      fullPath: '/locations'
+      preLoaderRoute: typeof AppLocationsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/payment': {
+      id: '/_app/payment'
+      path: '/payment'
+      fullPath: '/payment'
+      preLoaderRoute: typeof AppPaymentRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/profile': {
+      id: '/_app/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof AppProfileRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/profile-edit': {
+      id: '/_app/profile-edit'
+      path: '/profile-edit'
+      fullPath: '/profile-edit'
+      preLoaderRoute: typeof AppProfileEditRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/request': {
+      id: '/_app/request'
+      path: '/request'
+      fullPath: '/request'
+      preLoaderRoute: typeof AppRequestRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/legal/$doc': {
+      id: '/legal/$doc'
+      path: '/legal/$doc'
+      fullPath: '/legal/$doc'
+      preLoaderRoute: typeof LegalDocRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_app/services/$slug': {
+      id: '/_app/services/$slug'
+      path: '/services/$slug'
+      fullPath: '/services/$slug'
+      preLoaderRoute: typeof AppServicesSlugRouteImport
+      parentRoute: typeof AppRoute
+    }
   }
 }
 
+interface AppRouteChildren {
+  AppBookingsRoute: typeof AppBookingsRoute
+  AppConfirmationRoute: typeof AppConfirmationRoute
+  AppDepositRoute: typeof AppDepositRoute
+  AppHomeRoute: typeof AppHomeRoute
+  AppLocationRoute: typeof AppLocationRoute
+  AppLocationsRoute: typeof AppLocationsRoute
+  AppPaymentRoute: typeof AppPaymentRoute
+  AppProfileRoute: typeof AppProfileRoute
+  AppProfileEditRoute: typeof AppProfileEditRoute
+  AppRequestRoute: typeof AppRequestRoute
+  AppServicesSlugRoute: typeof AppServicesSlugRoute
+}
+
+const AppRouteChildren: AppRouteChildren = {
+  AppBookingsRoute: AppBookingsRoute,
+  AppConfirmationRoute: AppConfirmationRoute,
+  AppDepositRoute: AppDepositRoute,
+  AppHomeRoute: AppHomeRoute,
+  AppLocationRoute: AppLocationRoute,
+  AppLocationsRoute: AppLocationsRoute,
+  AppPaymentRoute: AppPaymentRoute,
+  AppProfileRoute: AppProfileRoute,
+  AppProfileEditRoute: AppProfileEditRoute,
+  AppRequestRoute: AppRequestRoute,
+  AppServicesSlugRoute: AppServicesSlugRoute,
+}
+
+const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AppRoute: AppRouteWithChildren,
+  ForgotRoute: ForgotRoute,
+  LoginRoute: LoginRoute,
+  OnboardingRoute: OnboardingRoute,
+  ReadyRoute: ReadyRoute,
+  SignupRoute: SignupRoute,
+  VerifyRoute: VerifyRoute,
+  LegalDocRoute: LegalDocRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

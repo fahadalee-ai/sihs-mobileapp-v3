@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Open Horizons Institute</title>
+  <title>Mobile App Preview</title>
   <style>
     :root {
       --bg: #0b0b0c;
@@ -44,6 +44,14 @@
     html,
     body {
       height: 100%;
+      overflow: hidden;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+
+    html::-webkit-scrollbar,
+    body::-webkit-scrollbar {
+      display: none;
     }
 
     body {
@@ -88,7 +96,7 @@
         width=390/427=91.335%, height=844/881=95.801%.
       */
     .safariScreen {
-      display: none;
+      display: block;
       position: absolute;
       left: 4.216%;
       top: 2.043%;
@@ -101,11 +109,7 @@
       background: var(--screenBg);
     }
 
-    html.ios .safariScreen {
-      display: block;
-    }
-
-    html.ios .foScreen {
+    .foScreen {
       display: none;
     }
 
@@ -142,6 +146,8 @@
       border: 0;
       display: block;
       background: #fff;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
     }
   </style>
 </head>
@@ -270,15 +276,19 @@
   </div>
 
     <script>
-      // Local file open (the dev server for this app). Override anytime with ?url=
-      const LOCAL_DEV_URL = "http://127.0.0.1:8082/";
+      const PRODUCTION_URL = "http://127.0.0.1:5173/";
 
-    function defaultPreviewUrl() {
-      // Served by the app or Vercel at /preview.html: show that same deployment.
-      if (location.protocol === "http:" || location.protocol === "https:") {
-        return new URL("/", location.origin).toString();
+    function defaultAppUrl() {
+      if (location.protocol === "file:") {
+        return "http://127.0.0.1:5173/";
       }
-      return LOCAL_DEV_URL;
+      if (location.hostname === "localhost" || location.hostname === "127.0.0.1") {
+        return location.origin + "/";
+      }
+      if (location.pathname.endsWith("preview.html")) {
+        return location.origin + location.pathname.replace(/preview\.html$/, "");
+      }
+      return PRODUCTION_URL;
     }
 
     function safeParseUrl(maybeUrl) {
@@ -297,17 +307,12 @@
       var isIOS = /iP(hone|od|ad)/.test(navigator.userAgent);
       if (isIOS) document.documentElement.classList.add("ios");
 
-      // Optional override: index.html?url=https%3A%2F%2Fexample.com
       const params = new URLSearchParams(location.search);
       const overrideUrl = params.get("url");
-      const finalUrl = safeParseUrl(overrideUrl) || defaultPreviewUrl();
+      const finalUrl = safeParseUrl(overrideUrl) || defaultAppUrl();
 
-      // Set src only on the iframe that will actually be visible.
-      if (isIOS) {
-        document.getElementById("previewFrameSafari").src = finalUrl;
-      } else {
-        document.getElementById("previewFrame").src = finalUrl;
-      }
+      var frame = document.getElementById("previewFrameSafari");
+      if (frame) frame.src = finalUrl;
 
       // Keep the Safari fallback screen geometry proportional on resize.
       // foreignObject screen: x=18,y=18,w=390,h=844 => pad-top=62/844, pad-bottom=34/844, radius=55/390
@@ -322,12 +327,10 @@
         safariEl.style.setProperty("--ss-pad-bottom", Math.round(padBot) + "px");
         safariEl.style.setProperty("--ss-radius", Math.round(radius) + "px");
       }
-      if (isIOS) {
-        updateSafariMetrics();
-        window.addEventListener("resize", function () {
-          requestAnimationFrame(updateSafariMetrics);
-        }, { passive: true });
-      }
+      updateSafariMetrics();
+      window.addEventListener("resize", function () {
+        requestAnimationFrame(updateSafariMetrics);
+      }, { passive: true });
 
       // Live clock in the status bar.
       const timeEl = document.getElementById("statusTime");

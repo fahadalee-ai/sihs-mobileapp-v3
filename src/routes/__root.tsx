@@ -4,16 +4,19 @@ import {
   Link,
   createRootRouteWithContext,
   useRouter,
+  useNavigate,
+  useRouterState,
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { AppProvider } from "../lib/store";
 import { AppShell } from "../components/AppShell";
 import { asset } from "../lib/utils";
+import { hasSeenSplash } from "../lib/intro";
 
 
 function NotFoundComponent() {
@@ -84,18 +87,20 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         name: "viewport",
         content: "width=device-width, initial-scale=1, viewport-fit=cover",
       },
-      { title: "Mobile App Starter" },
+      { title: "SIH&S" },
       {
         name: "description",
-        content: "Clean mobile app starter. This is the starting point for a new project.",
+        content:
+          "SIH&S — structured incident response for Northern New Castle County, Delaware. Delaware intrastate towing, collections, DNA services, PIM-VEE™, and notary.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "theme-color", content: "#f7f7f8" },
+      { name: "theme-color", content: "#001e16" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
-      { rel: "icon", href: asset("/favicon.ico"), type: "image/x-icon" },
+      { rel: "icon", href: asset("/favicon.png"), type: "image/png" },
+      { rel: "apple-touch-icon", href: asset("/logo.png") },
     ],
   }),
 
@@ -121,6 +126,12 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const navigate = useNavigate();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+
+  useLayoutEffect(() => {
+    if (!hasSeenSplash() && pathname !== "/") navigate({ to: "/", replace: true });
+  }, [navigate, pathname]);
 
   return (
     <QueryClientProvider client={queryClient}>

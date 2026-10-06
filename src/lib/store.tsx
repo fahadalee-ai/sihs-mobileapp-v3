@@ -1,109 +1,128 @@
 import { createContext, useContext, useMemo, useState, type ReactNode } from "react";
 import { clearStorage, readStorage, writeStorage } from "./storage";
-import {
-  seedActivity,
-  seedCompliance,
-  seedDocuments,
-  seedFieldwork,
-  seedForms,
-  seedNotifications,
-  seedSupervisor,
-  seedTemplates,
-  seedUsers,
-  type ActivityItem,
-  type AppDocument,
-  type AppNotification,
-  type ComplianceItem,
-  type FieldworkEntry,
-  type FormRecord,
-  type FormTemplate,
-  type Role,
-  type SupervisionSession,
-  type Supervisor,
-  type User,
-  seedSupervision,
-} from "./mock-data";
+
+export type User = {
+  id: string;
+  fullName: string;
+  email: string;
+  phone: string;
+  password: string;
+  address?: string;
+};
+
+export type SavedLocation = {
+  id: string;
+  label: string;
+  line: string;
+};
+
+export type BookingStatus = "ongoing" | "completed" | "canceled";
+
+export type Booking = {
+  id: string;
+  serviceSlug: string;
+  serviceTitle: string;
+  status: BookingStatus;
+  area: string;
+  when: string;
+  locationType?: string;
+  cancelReason?: "User canceled" | "No-show" | "Provider canceled";
+  depositDispatched?: boolean;
+  squareRef?: string;
+};
+
+export type DraftRequest = {
+  serviceSlug: string;
+  locationType?: "in-office" | "mobile";
+  when?: string;
+  vehicle?: {
+    make: string;
+    model: string;
+    year: string;
+    color: string;
+    plate: string;
+    notes: string;
+  };
+  termsAccepted?: boolean;
+  smsAccepted?: boolean;
+};
 
 export type Toast = { id: number; title: string; body?: string };
 
-type Prefs = {
-  "Supervision reminders": boolean;
-  "Compliance deadlines": boolean;
-  "Document expirations": boolean;
-  "Pending approvals": boolean;
-};
-
 type Store = {
-  users: User[];
   user: User | null;
+  guest: boolean;
   onboarded: boolean;
+  pendingEmail: string | null;
+  verifyCode: string | null;
+  locations: SavedLocation[];
+  bookings: Booking[];
+  draft: DraftRequest | null;
+  cardLast4: string | null;
+  toasts: Toast[];
   markOnboarded: () => void;
-  login: (email: string, password: string) => { ok: true } | { ok: false; reason: "invalid" | "admin" };
-  register: (input: {
-    firstName: string;
-    lastName: string;
-    email: string;
-    phone: string;
-    bacbNumber?: string;
-    password: string;
-    role: Role;
-  }) => { ok: true; email: string } | { ok: false; reason: "exists" };
+  continueAsGuest: () => void;
+  login: (email: string, password: string) => { ok: true } | { ok: false; reason: string };
+  beginSignup: (input: Omit<User, "id">) => { ok: true; email: string; code: string } | { ok: false; reason: string };
+  verifyEmail: (code: string) => boolean;
   logout: () => void;
   updateUser: (patch: Partial<User>) => void;
-  supervisor: Supervisor;
-  fieldwork: FieldworkEntry[];
-  addFieldwork: (entry: Omit<FieldworkEntry, "id" | "status">) => void;
-  updateFieldwork: (id: string, patch: Partial<FieldworkEntry>) => void;
-  removeFieldwork: (id: string) => void;
-  supervision: SupervisionSession[];
-  addSupervision: (entry: Omit<SupervisionSession, "id">) => void;
-  compliance: ComplianceItem[];
-  toggleRemind: (id: string) => void;
-  documents: AppDocument[];
-  addDocument: (doc: Omit<AppDocument, "id" | "status" | "uploadedAt"> & { status?: AppDocument["status"] }) => void;
-  replaceDocument: (id: string, name: string) => void;
-  removeDocument: (id: string) => void;
-  templates: FormTemplate[];
-  forms: FormRecord[];
-  submitForm: (record: Omit<FormRecord, "id" | "status" | "submittedAt">) => void;
-  notifications: AppNotification[];
-  markAllRead: () => void;
-  markNotificationRead: (id: string) => void;
-  activity: ActivityItem[];
-  prefs: Prefs;
-  togglePref: (key: keyof Prefs) => void;
-  toasts: Toast[];
+  addLocation: (loc: Omit<SavedLocation, "id">) => void;
+  updateLocation: (id: string, patch: Partial<SavedLocation>) => void;
+  removeLocation: (id: string) => void;
+  setDraft: (draft: DraftRequest | null) => void;
+  patchDraft: (patch: Partial<DraftRequest>) => void;
+  completeBooking: (input: { squareRef: string; when: string; locationType?: string }) => string;
+  cancelBooking: (id: string) => void;
+  rateBooking: (id: string) => void;
   pushToast: (title: string, body?: string) => void;
   dismissToast: (id: number) => void;
 };
 
 const Ctx = createContext<Store | null>(null);
 
-const DEFAULT_PREFS: Prefs = {
-  "Supervision reminders": true,
-  "Compliance deadlines": true,
-  "Document expirations": true,
-  "Pending approvals": true,
+const SEED_USER: User = {
+  id: "u-demo",
+  fullName: "Susan Hooks",
+  email: "sihs@susanshooks.com",
+  phone: "(302) 406-4665",
+  password: "Standing1",
+  address: "1201 N. Orange St., Suite 7724, Wilmington, DE 19801",
 };
 
-function loadSessionUser(users: User[]): User | null {
-  const id = readStorage("session");
-  if (!id) return null;
-  return users.find((u) => u.id === id) ?? null;
+function loadJson<T>(key: string, fallback: T): T {
+  const raw = readStorage(key);
+  if (!raw) return fallback;
+  try {
+    return JSON.parse(raw) as T;
+  } catch {
+    return fallback;
+  }
 }
 
 export function AppProvider({ children }: { children: ReactNode }) {
-  const [users, setUsers] = useState<User[]>(seedUsers);
-  const [user, setUser] = useState<User | null>(() => loadSessionUser(seedUsers));
+  const [users, setUsers] = useState<User[]>(() => loadJson("users", [SEED_USER]));
+  const [user, setUser] = useState<User | null>(() => {
+    const id = readStorage("session");
+    if (!id) return null;
+    const list = loadJson<User[]>("users", [SEED_USER]);
+    return list.find((u) => u.id === id) ?? null;
+  });
+  const [guest, setGuest] = useState(() => readStorage("guest") === "1");
   const [onboarded, setOnboarded] = useState(() => readStorage("onboarded") === "1");
-  const [fieldwork, setFieldwork] = useState(seedFieldwork);
-  const [supervision, setSupervision] = useState(seedSupervision);
-  const [compliance, setCompliance] = useState(seedCompliance);
-  const [documents, setDocuments] = useState(seedDocuments);
-  const [forms, setForms] = useState(seedForms);
-  const [notifications, setNotifications] = useState(seedNotifications);
-  const [activity, setActivity] = useState(seedActivity);
-  const [prefs, setPrefs] = useState<Prefs>(DEFAULT_PREFS);
+  const [pending, setPending] = useState<{ user: User; code: string } | null>(null);
+  const [locations, setLocations] = useState<SavedLocation[]>(() =>
+    loadJson("locations", [
+      {
+        id: "loc-hq",
+        label: "Wilmington office",
+        line: "1201 N. Orange St., Suite 7724, Wilmington, DE 19801",
+      },
+    ]),
+  );
+  const [bookings, setBookings] = useState<Booking[]>(() => loadJson("bookings", []));
+  const [draft, setDraftState] = useState<DraftRequest | null>(null);
+  const [cardLast4, setCardLast4] = useState<string | null>(() => readStorage("card") || "4242");
   const [toasts, setToasts] = useState<Toast[]>([]);
 
   const value = useMemo<Store>(() => {
@@ -113,136 +132,169 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), 3200);
     };
 
+    const persistUsers = (list: User[]) => {
+      setUsers(list);
+      writeStorage("users", JSON.stringify(list));
+    };
+
     return {
-      users,
       user,
+      guest,
       onboarded,
+      pendingEmail: pending?.user.email ?? null,
+      verifyCode: pending?.code ?? null,
+      locations,
+      bookings,
+      draft,
+      cardLast4,
+      toasts,
       markOnboarded: () => {
         setOnboarded(true);
         writeStorage("onboarded", "1");
       },
+      continueAsGuest: () => {
+        setGuest(true);
+        setUser(null);
+        writeStorage("guest", "1");
+        clearStorage("session");
+        writeStorage("onboarded", "1");
+        setOnboarded(true);
+      },
       login: (email, password) => {
         const found = users.find((u) => u.email.toLowerCase() === email.trim().toLowerCase());
-        if (!found || found.password !== password) return { ok: false, reason: "invalid" };
-        if (found.role === "admin") return { ok: false, reason: "admin" };
+        if (!found || found.password !== password) return { ok: false, reason: "Email or password is incorrect." };
         setUser(found);
+        setGuest(false);
         writeStorage("session", found.id);
+        clearStorage("guest");
         writeStorage("onboarded", "1");
         setOnboarded(true);
         return { ok: true };
       },
-      register: (input) => {
+      beginSignup: (input) => {
         if (users.some((u) => u.email.toLowerCase() === input.email.trim().toLowerCase())) {
-          return { ok: false, reason: "exists" };
+          return { ok: false, reason: "An account with that email already exists." };
         }
         const created: User = {
           id: `u${Date.now()}`,
-          firstName: input.firstName.trim(),
-          lastName: input.lastName.trim(),
+          fullName: input.fullName.trim(),
           email: input.email.trim().toLowerCase(),
           phone: input.phone.trim(),
           password: input.password,
-          role: input.role,
-          bacbNumber: input.bacbNumber?.trim() || undefined,
+          address: input.address?.trim() || undefined,
         };
-        setUsers((list) => [...list, created]);
+        const code = String(Math.floor(100000 + Math.random() * 900000));
+        setPending({ user: created, code });
+        return { ok: true, email: created.email, code };
+      },
+      verifyEmail: (code) => {
+        if (!pending || pending.code !== code.trim()) return false;
+        const next = [...users, pending.user];
+        persistUsers(next);
+        setUser(pending.user);
+        setGuest(false);
+        writeStorage("session", pending.user.id);
+        clearStorage("guest");
         writeStorage("onboarded", "1");
         setOnboarded(true);
-        return { ok: true, email: created.email };
+        setPending(null);
+        return true;
       },
       logout: () => {
         setUser(null);
+        setGuest(false);
         clearStorage("session");
+        clearStorage("guest");
       },
       updateUser: (patch) => {
         if (!user) return;
         const next = { ...user, ...patch };
         setUser(next);
-        setUsers((list) => list.map((u) => (u.id === next.id ? next : u)));
+        persistUsers(users.map((u) => (u.id === next.id ? next : u)));
+        pushToast("Profile updated");
       },
-      supervisor: seedSupervisor,
-      fieldwork,
-      addFieldwork: (entry) => {
-        const next: FieldworkEntry = { ...entry, id: `fw${Date.now()}`, status: "pending" };
-        setFieldwork((list) => [next, ...list]);
-        setActivity((list) => [
-          { id: `a${Date.now()}`, text: `Fieldwork logged — ${entry.hours.toFixed(1)} hrs`, time: "Just now", tone: "orange" },
-          ...list,
-        ]);
-        pushToast("Fieldwork entry saved");
+      addLocation: (loc) => {
+        const next = [{ ...loc, id: `loc${Date.now()}` }, ...locations];
+        setLocations(next);
+        writeStorage("locations", JSON.stringify(next));
+        pushToast("Location saved");
       },
-      updateFieldwork: (id, patch) => setFieldwork((list) => list.map((e) => (e.id === id ? { ...e, ...patch } : e))),
-      removeFieldwork: (id) => setFieldwork((list) => list.filter((e) => e.id !== id)),
-      supervision,
-      addSupervision: (entry) => {
-        setSupervision((list) => [{ ...entry, id: `sv${Date.now()}` }, ...list]);
-        pushToast(entry.status === "requested" ? "Session requested" : "Submitted for sign-off");
+      updateLocation: (id, patch) => {
+        const next = locations.map((l) => (l.id === id ? { ...l, ...patch } : l));
+        setLocations(next);
+        writeStorage("locations", JSON.stringify(next));
+        pushToast("Location updated");
       },
-      compliance,
-      toggleRemind: (id) =>
-        setCompliance((list) => list.map((c) => (c.id === id ? { ...c, remind: !c.remind } : c))),
-      documents,
-      addDocument: (doc) => {
-        const next: AppDocument = {
-          ...doc,
-          id: `doc${Date.now()}`,
-          status: doc.status ?? "pending",
-          uploadedAt: new Date().toISOString().slice(0, 10),
+      removeLocation: (id) => {
+        const next = locations.filter((l) => l.id !== id);
+        setLocations(next);
+        writeStorage("locations", JSON.stringify(next));
+        pushToast("Location deleted");
+      },
+      setDraft: (next) => setDraftState(next),
+      patchDraft: (patch) => setDraftState((d) => (d ? { ...d, ...patch } : d)),
+      completeBooking: ({ squareRef, when, locationType }) => {
+        const slug = draft?.serviceSlug ?? "towing";
+        const title =
+          slug === "towing"
+            ? "Delaware Intrastate Towing"
+            : slug === "lockouts"
+              ? "Lockouts"
+              : slug === "jump-starts"
+                ? "Jump Starts"
+                : slug === "fuel-delivery"
+                  ? "Fuel Delivery"
+                  : slug === "drug-alcohol"
+                    ? "Drug & Alcohol Collections"
+                    : slug === "dna"
+                      ? "DNA Services"
+                      : slug === "pim-vee"
+                        ? "PIM-VEE™"
+                        : "Notary";
+        const id = `SIHS-${Date.now().toString().slice(-6)}`;
+        const booking: Booking = {
+          id,
+          serviceSlug: slug,
+          serviceTitle: title,
+          status: "ongoing",
+          area: "Northern New Castle County, DE",
+          when,
+          locationType,
+          squareRef,
         };
-        setDocuments((list) => [next, ...list]);
-        if (doc.category) {
-          setCompliance((list) =>
-            list.map((c) =>
-              c.category === doc.category
-                ? { ...c, documentId: next.id, status: "current", detail: "Pending review" }
-                : c,
-            ),
-          );
-        }
-        pushToast("Document submitted");
+        const next = [booking, ...bookings];
+        setBookings(next);
+        writeStorage("bookings", JSON.stringify(next));
+        setCardLast4("4242");
+        writeStorage("card", "4242");
+        setDraftState(null);
+        return id;
       },
-      replaceDocument: (id, name) => {
-        setDocuments((list) => list.map((d) => (d.id === id ? { ...d, name, status: "pending" } : d)));
-        pushToast("Document resubmitted");
+      cancelBooking: (id) => {
+        const next = bookings.map((b) =>
+          b.id === id
+            ? {
+                ...b,
+                status: "canceled" as const,
+                cancelReason: "User canceled" as const,
+                depositDispatched: b.serviceSlug === "towing" || b.serviceSlug === "lockouts",
+              }
+            : b,
+        );
+        setBookings(next);
+        writeStorage("bookings", JSON.stringify(next));
+        pushToast("Booking canceled");
       },
-      removeDocument: (id) => setDocuments((list) => list.filter((d) => d.id !== id)),
-      templates: seedTemplates,
-      forms,
-      submitForm: (record) => {
-        const next: FormRecord = {
-          ...record,
-          id: `f${Date.now()}`,
-          status: "pending",
-          submittedAt: new Date().toISOString().slice(0, 10),
-        };
-        setForms((list) => [next, ...list.filter((f) => f.templateId !== record.templateId || f.status !== "todo")]);
-        pushToast("Form submitted");
+      rateBooking: (id) => {
+        const next = bookings.map((b) => (b.id === id ? { ...b, status: "completed" as const } : b));
+        setBookings(next);
+        writeStorage("bookings", JSON.stringify(next));
+        pushToast("Thank you", "Your rating was recorded.");
       },
-      notifications,
-      markAllRead: () => setNotifications((list) => list.map((n) => ({ ...n, read: true }))),
-      markNotificationRead: (id) =>
-        setNotifications((list) => list.map((n) => (n.id === id ? { ...n, read: true } : n))),
-      activity,
-      prefs,
-      togglePref: (key) => setPrefs((p) => ({ ...p, [key]: !p[key] })),
-      toasts,
       pushToast,
       dismissToast: (id) => setToasts((t) => t.filter((x) => x.id !== id)),
     };
-  }, [
-    users,
-    user,
-    onboarded,
-    fieldwork,
-    supervision,
-    compliance,
-    documents,
-    forms,
-    notifications,
-    activity,
-    prefs,
-    toasts,
-  ]);
+  }, [user, guest, onboarded, pending, locations, bookings, draft, cardLast4, toasts, users]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
